@@ -16,7 +16,7 @@ configure:
 	./configure \
 		--prefix=$(STAGEDIR) \
 		--enable-static \
-		--disable-shared \
+		--enable-shared \
 		$(if $(CONFIG_IPV6),--enable-ipv6,--disable-ipv6) \
 		--disable-yydebug \
 		--disable-can \
@@ -41,7 +41,7 @@ clean:
 
 install:
 	$(MAKE) -C $(SRC_NAME) install DESTDIR="" ;
-	rm -f $(DESTDIR)/lib/libpcap.so* ;
+	# rm -f $(DESTDIR)/lib/libpcap.so* ;
 
 romfs:
 
