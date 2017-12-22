@@ -10,22 +10,25 @@ if [ "$1" = "--kernel-3_0" ] ; then
 fi
 
 DO_UNPACK=YES
-DO_HEADERS=YES
 DO_BINUTILS=YES
-DO_GCC=YES
+DO_GCC_S1=YES
+DO_HEADERS=YES
 DO_UCLIBC=YES
-DO_GCCCPP=YES
+DO_GCC_S2=YES
+DO_GCCCPP=NO
 
 HOST_NCPU=1
 if [ -f /proc/cpuinfo ] ; then
     HOST_NCPU=`grep -c processor /proc/cpuinfo`
     [ $HOST_NCPU -lt 1 ] && HOST_NCPU=1
 fi
-
+HOST_NCPU=4
 ID_BINUTILS="binutils-$BINUTILSVER"
 ID_GCC="gcc-$GCCVER"
-ID_UCLIBC="uClibc-$UCLIBCVER"
+ID_UCLIBC="uClibc-ng-$UCLIBCVER"
 ID_TOOLCHAIN="toolchain-$KERNELVER"
+URL_UCLIBC=https://downloads.uclibc-ng.org/releases/${UCLIBCVER}/uClibc-ng-${UCLIBCVER}.tar.bz2
+URL_GCC=https://mirrors.ustc.edu.cn/gnu/gcc/gcc-${GCCVER}/gcc-${GCCVER}.tar.bz2
 
 export LANGUAGE=en_US.UTF-8:en
 export LANG=en_US.UTF-8
@@ -49,7 +52,7 @@ if [ "$HOSTGCCVER" != "4.3" ] && [ "$HOSTGCCVER" != "4.4" ]; then
         HOSTCFLAGS="$HOSTCFLAGS -fno-delete-null-pointer-checks"
     fi
     if [ "$HOSTGCCVER" \> "5.0" ]; then
-        HOSTCFLAGS="$HOSTCFLAGS -fgnu89-inline"
+        HOSTCFLAGS="$HOSTCFLAGS -fgnu89-inline -O2"
     fi
 fi
 export CFLAGS="$HOSTCFLAGS"
@@ -58,14 +61,14 @@ export CFLAGS="$HOSTCFLAGS"
 
 GCCMJ=`echo $GCCVER | cut -f -2 -d '.'`
 echo "Target GCC version=$GCCMJ"
-EXT_OPT="--disable-sanity-checks --disable-werror"
-EXT_OPT="$EXT_OPT --disable-lto --enable-ld=yes --enable-gold=no"
-if [ "$GCCMJ" = "4.6" ] || [ "$GCCMJ" = "4.7" ] || [ "$GCCMJ" = "4.8" ] || [ "$GCCMJ" = "4.9" ]; then
-    EXT_OPT="$EXT_OPT --disable-biendian --disable-softfloat"
-    EXT_OPT="$EXT_OPT --disable-libquadmath --disable-libquadmath-support"
+EXT_OPT="--disable-sanity-checks --disable-werror "
+EXT_OPT="$EXT_OPT --enable-lto --enable-ld=yes --enable-gold=no "
+if [ "$GCCMJ" = "4.6" ] || [ "$GCCMJ" = "4.7" ] || [ "$GCCMJ" = "4.8" ] || [ "$GCCMJ" = "4.9" ] || [ "$GCCMJ" = "6.3" ]; then
+    EXT_OPT="$EXT_OPT --disable-biendian "
+    EXT_OPT="$EXT_OPT --disable-libquadmath --disable-libquadmath-support "
 fi
-if [ "$GCCMJ" = "4.8" ] || [ "$GCCMJ" = "4.9" ]; then
-    EXT_OPT="$EXT_OPT --disable-libatomic --with-pic"
+if [ "$GCCMJ" = "4.8" ] || [ "$GCCMJ" = "4.9" ] || [ "$GCCMJ" = "6.3" ]; then
+    EXT_OPT="$EXT_OPT --disable-libatomic --with-pic "
 fi
 
 #####################################CHECK TLS SUPPORT FOR UCLIBC#######################################
@@ -75,6 +78,9 @@ UCLIBCMJ=`echo $UCLIBCVER | cut -f3 -d '.' `
 TLS_OPT="--disable-tls --disable-threads"
 eval `grep \^UCLIBC_HAS_TLS= "$TARGET_DIR/${ID_UCLIBC}.config"`
 [ "$UCLIBC_HAS_TLS" = "y" ] && TLS_OPT="--enable-tls --enable-threads=posix"
+has_fpu=`grep '^UCLIBC_HAS_FPU=y' "$TARGET_DIR/${ID_UCLIBC}.config"`
+# [ x"$has_fpu" = x ] &&
+FPU_OPT="--with-float=soft"
 
 #########################################################################################################
 
@@ -92,9 +98,17 @@ if [ "$DO_UNPACK" = "YES" ]; then
     tar xjf $ID_BINUTILS.tar.bz2
     echo "=====================EXTRACT-UCLIBC====================="
     rm -rf $ID_UCLIBC
+    if [ ! -f $ID_UCLIBC.tar.bz2 ];then
+        echo "=====================download uClibc-ng==================="
+        wget -O $ID_UCLIBC.tar.bz2 $URL_UCLIBC || { echo "uclibc download failed "; exit 1; }
+    fi
     tar xjf $ID_UCLIBC.tar.bz2
     echo "======================EXTRACT-GCC======================="
     rm -rf $ID_GCC
+    if [ ! -f $ID_GCC.tar.bz2 ];then
+        echo "=====================download gcc==================="
+        wget -O $ID_GCC.tar.bz2 $URL_GCC || { echo "gcc download failed "; exit 1 ;}
+    fi
     tar xjf $ID_GCC.tar.bz2
     echo "===================PATCHING-BINUTILS===================="
     cd $ID_BINUTILS
@@ -116,42 +130,49 @@ if [ "$DO_UNPACK" = "YES" ]; then
     cd ..
 fi
 
+if [ "$DO_BINUTILS" = "YES" ]; then
+    echo "=====================BUILD-BINUTILS====================="
+    mkdir -p build-binutils && cd build-binutils
+    (../$ID_BINUTILS/configure --target=$TARGET --prefix="$PREFIX" \
+        --with-sysroot="$PREFIX" --with-build-sysroot="$PREFIX" \
+        --disable-nls --disable-werror --disable-multilib && \
+    make -j${HOST_NCPU} && \
+    make install) || exit 1
+    cd ..
+fi
+
+# please install some tools on your host-system:
+# isl mpc mpfr ncurses gmp ....perhaps some more
+if [ "$DO_GCC_S1" = "YES" ]; then
+    echo "=====================BUILD-GCC-C========================"
+    mkdir -p build-gcc-bootstrap-1 && cd build-gcc-bootstrap-1
+    (../$ID_GCC/configure \
+         --target=$TARGET --prefix="$PREFIX" \
+         --with-gnu-ld --with-gnu-as \
+         --disable-shared --disable-multilib \
+         --disable-libmudflap --disable-libssp $EXT_OPT \
+         --disable-libgomp --disable-nls \
+         --with-newlib  --disable-threads $FPU_OPT \
+         --without-headers \
+         --with-arch=mips32r2 --with-abi=32 --with-tune=mips32r2 \
+         --enable-__cxa_atexit \
+         --disable-libmpx --with-host-libstdcxx='-static-libgcc -Wl,-Bstatic,-lstdc++,-Bdynamic -lm'  \
+         --enable-target-optspace --with-mips-plt \
+         --enable-languages=c && \
+         make -j${HOST_NCPU} && \
+         make install) || exit 1
+    cd ..
+fi
+
 if [ "$DO_HEADERS" = "YES" ]; then
     echo "=====================BUILD-C-HEADERS===================="
     rm -rf "$PREFIX/include"
     rm -rf "$PREFIX/usr/include"
     cp -rf "$TARGET_DIR/include" "$PREFIX/include"
     cp -fv ${ID_UCLIBC}.config $ID_UCLIBC/.config
-    make -C $ID_UCLIBC install_headers
+    make  -C $ID_UCLIBC CC=mipsel-linux-uclibc-gcc install_headers
     mkdir -p "$PREFIX/usr"
     ln -sf ../include "$PREFIX/usr/include"
-fi
-
-if [ "$DO_BINUTILS" = "YES" ]; then
-    echo "=====================BUILD-BINUTILS====================="
-    mkdir -p build-binutils && cd build-binutils
-    (../$ID_BINUTILS/configure --target=$TARGET --prefix="$PREFIX" \
-        --with-sysroot="$PREFIX" --with-build-sysroot="$PREFIX" \
-        --disable-nls --disable-werror --disable-multilib &&
-    make -j${HOST_NCPU} && \
-    make install) || exit 1
-    cd ..
-fi
-
-if [ "$DO_GCC" = "YES" ]; then
-    echo "=====================BUILD-GCC-C========================"
-    mkdir -p build-gcc-bootstrap && cd build-gcc-bootstrap
-    (../$ID_GCC/configure \
-        --target=$TARGET --prefix="$PREFIX" \
-        --with-gnu-ld --with-gnu-as \
-        --disable-shared --disable-multilib \
-        $TLS_OPT --disable-libmudflap --disable-libssp $EXT_OPT \
-        --disable-libgomp --disable-nls \
-        --with-sysroot="$PREFIX" \
-        --enable-languages=c && \
-    make -j${HOST_NCPU} && \
-    make install) || exit 1
-    cd ..
 fi
 
 if [ "$DO_UCLIBC" = "YES" ]; then
@@ -163,6 +184,28 @@ if [ "$DO_UCLIBC" = "YES" ]; then
     cd ..
 fi
 
+if [ "$DO_GCC_S2" = "YES" ]; then
+    echo "=====================BUILD-GCC-C========================"
+    mkdir -p build-gcc-bootstrap-2 && cd build-gcc-bootstrap-2
+    (../$ID_GCC/configure \
+         --target=$TARGET --prefix="$PREFIX" \
+         --with-gnu-ld --with-gnu-as \
+         --enable-shared --disable-multilib \
+         $TLS_OPT --disable-libmudflap --disable-libssp $EXT_OPT \
+         --disable-libgomp --disable-nls $FPU_OPT \
+         --with-arch=mips32r2 --with-abi=32 --with-tune=mips32r2 \
+         --enable-__cxa_atexit \
+         --disable-libsanitizer --disable-libmpx \
+         --with-host-libstdcxx='-static-libgcc -Wl,-Bstatic,-lstdc++,-Bdynamic -lm'  \
+         --enable-target-optspace --with-mips-plt --enable-threads=posix --enable-plugin \
+         --enable-long-long \
+         --with-sysroot="$PREFIX" \
+         --enable-languages=c,c++ && \
+				 make -j${HOST_NCPU} && \
+				 make install) || exit 1
+    cd ..
+fi
+
 if [ "$DO_GCCCPP" = "YES" ]; then
     echo "====================BUILD-GCC-CPP======================="
     mkdir -p build-gcc-bootstrap-cpp && cd build-gcc-bootstrap-cpp
@@ -171,7 +214,7 @@ if [ "$DO_GCCCPP" = "YES" ]; then
         --with-gnu-ld --with-gnu-as \
         --disable-shared --disable-multilib \
         $TLS_OPT --disable-libmudflap --disable-libssp $EXT_OPT \
-        --disable-libgomp --disable-nls \
+        --disable-libgomp --disable-nls $FPU_OPT \
         --with-sysroot="$PREFIX" \
         --enable-languages=c++ && \
     make -j${HOST_NCPU} all-host all-target-libgcc all-target-libstdc++-v3 && \
@@ -187,3 +230,38 @@ fi
 
 echo "======================All IS DONE!========================="
 
+# If you are compiling gcc for a clib you have not installed yet, use the --with-newlib switch in your configure.
+# This is what Linux From Scratch does, and is also available in the Debian source package build process
+# by setting their environment variable DEB_STAGE=stage1. The Debian code from debian/rules2:
+
+# ifdef DEB_STAGE
+# CONFARGS += \
+#          --disable-decimal-float \
+#          --disable-libatomic \
+#          --disable-libgomp \
+#          --disable-libmudflap \
+#          --disable-libssp \
+#          --disable-libquadmath \
+#          --disable-libsanitizer \
+#          --disable-threads \
+#          --libexecdir=/$(libexecdir) \
+#          --libdir=/$(PF)/$(configured_libdir) \
+#          $(if $(with_build_sysroot),--with-build-sysroot=$(with_build_sysroot)) \
+#          $(if $(with_sysroot),--with-sysroot=$(with_sysroot))
+# .
+# .
+# .
+# ifeq ($(DEB_STAGE),stage1)
+# CONFARGS += \
+#          --disable-shared \
+#          --with-newlib \
+#          --without-headers
+# else
+#     # stage2
+#     CONFARGS += \
+#              --enable-shared
+#     endif
+# else
+#     CONFARGS += \
+#              --enable-shared \
+#              --enable-linker-build-id

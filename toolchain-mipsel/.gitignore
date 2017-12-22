@@ -13,3 +13,8 @@ config.log
 config.status
 toolchain-*
 toolchain-*/*
+src/mipsel-linux-uclibc-toolchain/build-*/*
+src/mipsel-linux-uclibc-toolchain/gcc-*/*
+src/mipsel-linux-uclibc-toolchain/include/
+src/mipsel-linux-uclibc-toolchain/uClibc-*/
+src/mipsel-linux-uclibc-toolchain/binutils*/
