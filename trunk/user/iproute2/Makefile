@@ -10,6 +10,8 @@ ifdef CONFIG_IPV6
 IPROUTE2_ENABLED=y
 endif
 
+CFLAGS += -DHAVE_SETNS
+
 all:
 ifeq ($(IPROUTE2_ENABLED),y)
 	$(MAKE) -C $(SRC_NAME)
