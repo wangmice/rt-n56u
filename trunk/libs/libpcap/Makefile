@@ -44,4 +44,5 @@ install:
 	# rm -f $(DESTDIR)/lib/libpcap.so* ;
 
 romfs:
+	cp -fP $(DESTDIR)/lib/libpcap.so* $(ROMFSDIR)/lib/
 
