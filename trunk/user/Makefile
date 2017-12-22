@@ -151,6 +151,7 @@ dir_y						+= optware
 endif
 dir_y						+= mtd-utils
 endif
+dir_$(CONFIG_FIRMWARE_INCLUDE_PCAP_DNSPROXY)                      += pcap-dnsproxy
 
 all:
 	for i in $(dir_y) ; do \
