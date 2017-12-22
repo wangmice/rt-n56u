@@ -1,4 +1,4 @@
-SRC_NAME1="nfs-utils-1.2.3"
+SRC_NAME1="nfs-utils-2.1.1"
 SRC_NAME2="portmap_6.0"
 
 CFLAGS += -ffunction-sections -fdata-sections
