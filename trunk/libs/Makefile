@@ -155,7 +155,12 @@ romfs:
 		[ -d $$i ] && \
 		$(MAKE) -C $$i romfs ; \
 	done
-	
+	##################libc++############################################
+ifeq ($(CONFIG_FIRMWARE_INCLUDE_PCAP_DNSPROXY),y)
+	cp -fP $(CONFIG_CROSS_COMPILER_ROOT)/mipsel-linux-uclibc/lib/libgcc_s.so*  $(ROMFSDIR)/lib/
+	cp -fP $(CONFIG_CROSS_COMPILER_ROOT)/mipsel-linux-uclibc/lib/libstdc++.so* $(ROMFSDIR)/lib/
+endif
+
 clean:
 	for i in `ls -d *` ; do \
 		if [ -d $$i ] ; then \
