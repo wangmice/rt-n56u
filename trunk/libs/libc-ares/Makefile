@@ -33,5 +33,7 @@ install:
 	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
 
 romfs:
+ifeq ($(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS),y)
 	cp -fP $(DESTDIR)/lib/libcares.so* $(ROMFSDIR)/lib/
+endif
 

@@ -36,5 +36,7 @@ install:
 	# rm -f $(DESTDIR)/lib/libpcap.so* ;
 
 romfs:
+ifeq ($(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS),y)
 	cp -fP $(DESTDIR)/lib/libpcre*.so* $(ROMFSDIR)/lib/
+endif
 

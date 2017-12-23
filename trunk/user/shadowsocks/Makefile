@@ -32,10 +32,11 @@ clean:
 	if [ -f $(SRC_NAME)/Makefile ] ; then \
 		$(MAKE) -C $(SRC_NAME) distclean ; \
 	fi; \
-	rm -f ss-redir
-	rm -f ss-tunnel
-	rm -f ss-local
-	rm -f ss-server
+	rm -f ss-redir ; \
+	rm -f ss-tunnel ; \
+	rm -f ss-local ; \
+	rm -f ss-server ; \
+	rm -f config_done
 
 romfs:
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS),y)
