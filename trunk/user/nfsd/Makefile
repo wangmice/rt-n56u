@@ -29,6 +29,7 @@ config_test:
 
 configure:
 	( cd $(SRC_NAME1) && \
+	if [ ! -f configure ];then autoreconf; fi; \
 	knfsd_cv_bsd_signals=no \
 	./configure \
 		--prefix=/ \
