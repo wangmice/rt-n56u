@@ -103,6 +103,7 @@ dir_$(LIBS_INCLUDE_LIBUSB_1)			+= libusb-1.0
 dir_y						+= libnfnetlink
 dir_y						+= libsodium
 dir_y						+= libc-ares
+dir_y						+= libev
 
 # ipset shared libs
 dir_$(CONFIG_FIRMWARE_INCLUDE_IPSET)		+= libmnl
