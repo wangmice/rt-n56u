@@ -105,6 +105,7 @@ dir_y						+= libsodium
 dir_y						+= libc-ares
 dir_y						+= libev
 dir_y						+= libpcre
+dir_y						+= libmbedtls
 
 # ipset shared libs
 dir_$(CONFIG_FIRMWARE_INCLUDE_IPSET)		+= libmnl
