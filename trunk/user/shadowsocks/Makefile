@@ -1,74 +1,51 @@
-SRC_NAME1="nfs-utils-2.1.1"
-SRC_NAME2="portmap_6.0"
+SRC_NAME="shadowsocks-libev-3.1.1"
 
 CFLAGS += -ffunction-sections -fdata-sections
 LDFLAGS += -Wl,--gc-sections
 
-PORTMAP_ENABLED=
-ifeq ($(CONFIG_FIRMWARE_INCLUDE_NFSD),y)
-PORTMAP_ENABLED=y
-endif
-ifeq ($(CONFIG_FIRMWARE_INCLUDE_NFSC),y)
-PORTMAP_ENABLED=y
-endif
-
 all: config_test
-ifeq ($(CONFIG_FIRMWARE_INCLUDE_NFSD),y)
-	$(MAKE) -C $(SRC_NAME1)
-endif
-ifeq ($(PORTMAP_ENABLED),y)
-	$(MAKE) -C $(SRC_NAME2) NO_TCP_WRAPPER=1 DAEMON_UID=99 DAEMON_GID=99
+ifeq ($(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS),y)
+	$(MAKE) -C $(SRC_NAME)
 endif
 
 config_test:
 	( if [ -f ./config_done ]; then \
 		echo "the same configuration"; \
-	elif [ "$(CONFIG_FIRMWARE_INCLUDE_NFSD)" = "y" ] ; then \
+	elif [ "$(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS)" = "y" ] ; then \
 		make configure && touch config_done; \
 	fi )
 
 configure:
-	( cd $(SRC_NAME1) && \
+	( cd $(SRC_NAME) && \
 	if [ ! -f configure ];then autoreconf; fi; \
-	knfsd_cv_bsd_signals=no \
 	./configure \
 		--prefix=/ \
-		--disable-ipv6 \
-		--disable-tirpc \
-		--disable-mount \
-		--disable-libmount \
-		--disable-nfsv4 \
-		--disable-nfsv41 \
-		--disable-uuid \
-		--disable-gss \
-		--without-krb5 \
-		--without-tcp-wrappers \
+		--disable-documentation \
+		--disable-silent-rules \
+		--disable-assert \
+		--disable-ssp \
 		--host=$(HOST_TARGET) \
 		--build=$(HOST_BUILD) ; \
 	)
 
 clean:
-	if [ -f $(SRC_NAME1)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME1) distclean ; \
+	if [ -f $(SRC_NAME)/Makefile ] ; then \
+		$(MAKE) -C $(SRC_NAME) distclean ; \
 	fi; \
-	$(MAKE) -C $(SRC_NAME2) clean
-	rm -f portmap
-	rm -f exportfs
-	rm -f rpc.nfsd
-	rm -f rpc.mountd
-	rm -f config_done
+	rm -f ss-redir
+	rm -f ss-tunnel
+	rm -f ss-local
+	rm -f ss-server
 
 romfs:
-ifeq ($(PORTMAP_ENABLED),y)
-	cp $(SRC_NAME2)/portmap .
-	$(ROMFSINST) /sbin/portmap
-endif
-ifeq ($(CONFIG_FIRMWARE_INCLUDE_NFSD),y)
-	cp $(SRC_NAME1)/utils/exportfs/exportfs .
-	cp $(SRC_NAME1)/utils/nfsd/nfsd ./rpc.nfsd
-	cp $(SRC_NAME1)/utils/mountd/mountd ./rpc.mountd
-	$(ROMFSINST) /usr/bin/nfsd.sh
-	$(ROMFSINST) /sbin/exportfs
-	$(ROMFSINST) /sbin/rpc.nfsd
-	$(ROMFSINST) /sbin/rpc.mountd
+ifeq ($(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS),y)
+	cp $(SRC_NAME)/src/ss-redir .
+	cp $(SRC_NAME)/src/ss-tunnel .
+	cp $(SRC_NAME)/src/ss-server .
+	cp $(SRC_NAME)/src/ss-local .
+	$(ROMFSINST) /usr/bin/ss-redir
+	$(ROMFSINST) /usr/bin/ss-tunnel
+	$(ROMFSINST) /usr/bin/ss-rules
+	$(ROMFSINST) /usr/bin/ss-local
+	$(ROMFSINST) /usr/bin/ss-server
 endif
