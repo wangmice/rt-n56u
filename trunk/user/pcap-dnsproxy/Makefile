@@ -43,6 +43,8 @@ clean:
 	rm -rf  $(SRC_NAME)/CMakeFiles; \
 	rm -rf  $(SRC_NAME)/Source/Pcap_DNSProxy/CMakeFiles; \
 	rm -f  $(SRC_NAME)/Source/Pcap_DNSProxy/Pcap_DNSProxy; \
+	rm -f  $(SRC_NAME)/Source/Pcap_DNSProxy/Makefile; \
+	rm -f  $(SRC_NAME)/Source/Pcap_DNSProxy/cmake_install.cmake; \
 	rm -f  $(SRC_NAME)/cmake_install.cmake ; \
 	rm -f config_done
 
