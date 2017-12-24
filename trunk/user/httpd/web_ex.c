@@ -2108,6 +2108,16 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 #else
 	int found_app_sshd = 0;
 #endif
+#if defined(APP_KOOLPROXY)
+	int found_app_koolproxy = 1;
+#else
+	int found_app_koolproxy = 0;
+#endif
+#if defined(APP_TORR)
+	int found_app_torr = 1;
+#else
+	int found_app_torr = 0;
+#endif
 #if defined(APP_XUPNPD)
 	int found_app_xupnpd = 1;
 #else
@@ -2224,15 +2234,13 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 		"function found_app_ovpn() { return %d;}\n"
 		"function found_app_dlna() { return %d;}\n"
 		"function found_app_ffly() { return %d;}\n"
-		"function found_app_torr() { return %d;}\n"
 		"function found_app_trmd() { return %d;}\n"
 		"function found_app_aria() { return %d;}\n"
 		"function found_app_xunlei() { return %d;}\n"
 		"function found_app_adbyby() { return %d;}\n"
-		"function found_app_koolproxy() { return %d;}\n"
 		"function found_app_kms() { return %d;}\n"
 		"function found_app_dnsq() { return %d;}\n"
-		"function found_app_ngrok() { return %d;}\n" 
+		"function found_app_ngrok() { return %d;}\n"
 		"function found_app_nfsd() { return %d;}\n"
 		"function found_app_smbd() { return %d;}\n"
 		"function found_app_nmbd() { return %d;}\n"
@@ -2242,6 +2250,8 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 		"function found_srv_lprd() { return %d;}\n"
 		"function found_app_sshd() { return %d;}\n"
 		"function found_app_xupnpd() { return %d;}\n",
+        "function found_app_koolproxy() { return %d;}\n"
+        "function found_app_torr() { return %d;}\n"
 		found_utl_hdparm,
 		found_app_ovpn,
 		found_app_dlna,
@@ -2250,9 +2260,9 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 		found_app_aria,
 		found_app_xunlei,
 		found_app_adbyby,
-		found_app_ngrok,
 		found_app_kms,
 		found_app_dnsq,
+        found_app_ngrok,
 		found_app_nfsd,
 		found_app_smbd,
 		found_app_nmbd,
@@ -2261,7 +2271,9 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 		found_srv_u2ec,
 		found_srv_lprd,
 		found_app_sshd,
-		found_app_xupnpd
+        found_app_xupnpd,
+        found_app_koolproxy,
+        found_app_torr
 	);
 
 	websWrite(wp,
