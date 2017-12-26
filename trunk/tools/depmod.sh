@@ -46,3 +46,5 @@ rm -f "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/modules.builtin.bin"
 rm -f "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/modules.order"
 rm -f "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/build"
 rm -f "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/source"
+# sed -i "s/kernel\//\/lib\/modules\/${KERNELRELEASE}\/kernel\//g" ${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/modules.dep
+# ln -snf ${KERNELRELEASE}/modules.dep  ${INSTALL_MOD_PATH}/lib/modules/modules.dep || true
