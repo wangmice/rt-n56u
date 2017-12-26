@@ -593,16 +593,6 @@ void stop_aria(void);
 void run_aria(void);
 void restart_aria(void);
 #endif
-#if defined (APP_ADBYBY)
-void restart_adbyby(void);
-#endif
-#if defined (APP_XUNLEI)
-void restart_xunlei(void);
-#endif
-void restart_koolproxy(void);
-void restart_kms(void);
-void restart_dnsq(void);
-
 int count_stor_mountpoint(void);
 void umount_stor_path(struct disk_info_t *disks_info, int port, const char *dev_name, int do_spindown);
 void umount_ejected(void);
@@ -741,5 +731,25 @@ int  mdev_sd_main(int argc, char **argv);
 int  mdev_mmc_main(int argc, char **argv);
 #endif
 #endif
+
+#if defined (APP_XUNLEI)
+void restart_xunlei(void);
+#endif
+#if defined (APP_ADBYBY)
+void restart_adbyby(void);
+#endif
+#if defined (APP_NGROK)
+void restart_ngrok(void);
+#endif
+#if defined (APP_KMS)
+void restart_kms(void);
+#endif
+#if defined (APP_DNSQ)
+void restart_dnsq(void);
+#endif
+#if defined (APP_KOOLPROXY)
+void restart_koolproxy(void);
+#endif
+
 
 #endif /* _rc_h_ */

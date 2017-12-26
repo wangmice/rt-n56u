@@ -2604,10 +2604,10 @@ int start_udhcpc_wan(char *wan_ifname, int unit, int wait_lease)
 	if (is_man_wisp(wan_ifname) || is_usbnet_interface(wan_ifname))
 		dhcp_argv[7] = "-t6";
 
-	if (wait_lease)
+	/* if (wait_lease) */
 		dhcp_argv[index++] = "-b";	/* Background if lease is not obtained (timeout 4*4 sec) */
-	else
-		dhcp_argv[index++] = "-d";	/* Background after run (new patch for udhcpc) */
+	/*else
+		dhcp_argv[index++] = "-d";	/\* Background after run (new patch for udhcpc) */
 
 	wan_hostname = get_wan_unit_value(unit, "hostname");
 	if (strlen(wan_hostname) > 0) {
@@ -2654,7 +2654,7 @@ int start_udhcpc_viptv(char *man_ifname)
 		"-p", pidfile,
 		"-t4",
 		"-T4",
-		"-d",		/* Background after run (new patch for udhcpc) */
+		"-b",		/* Background after run (new patch for udhcpc) */
 		NULL,		/* -O mtu		*/
 		NULL,		/* -O routes		*/
 		NULL,		/* -O staticroutes	*/

@@ -1178,10 +1178,12 @@ handle_notifications(void)
 			restart_ngrok();
 		}
 #endif
+#if defined(APP_DNSQ)
 		else if (strcmp(entry->d_name, RCN_RESTART_DNSQ) == 0)
 		{
 			restart_dnsq();
 		}
+#endif
 #endif
 		else if (strcmp(entry->d_name, RCN_RESTART_HTTPD) == 0)
 		{

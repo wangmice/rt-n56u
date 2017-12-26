@@ -1127,42 +1127,57 @@ void restart_aria(void)
 		restart_firewall();
 }
 #endif
+
 /*迅雷、ADBYBY、kms*/
+
+#if defined (APP_XUNLEI)
 void restart_xunlei(void)
 {
 	if (count_stor_mountpoint())
 		eval("/usr/bin/xunlei.sh");
 }
+#endif
 
+#if defined (APP_ADBYBY)
 void restart_adbyby(void)
 {
 	if (count_stor_mountpoint())
 		eval("/usr/bin/adbyby.sh");
 }
+#endif
 
+#if defined (APP_KOOLPROXY)
 void restart_koolproxy(void)
 {
 	if (count_stor_mountpoint())
 		eval("/usr/bin/koolproxy.sh");
 }
+#endif
 
+#if defined (APP_KMS)
 void restart_kms(void)
 {
 	if (count_stor_mountpoint())
 		eval("/usr/bin/kms.sh");
 }
+#endif
 
+#if defined (APP_DNSQ)
 void restart_dnsq(void)
 {
 	if (count_stor_mountpoint())
 		eval("/usr/bin/dnsq.sh");
 }
+#endif
 
+#if defined (APP_NGROK)
 void restart_ngrok(void)
 {
 	if (count_stor_mountpoint())
 		eval("/usr/bin/ngrok.sh");
 }
+#endif
+
 /*迅雷、ADBYBY、kms*/
 static void
 restore_home_dir(void)
