@@ -22,3 +22,7 @@ CONFIG_FIRMWARE_INCLUDE_LRZSZ=y（lrzsz）<br>
 原项目地址: https://bitbucket.org/padavan/rt-n56u<br>
 汉化文件项目地址:https://git.oschina.net/gorden5566/padavan <br>
 源码更新介绍地址（update):http://www.right.com.cn/forum/thread-216667-1-1.html
+<h1>在此基础上的更新</h1>
+更新toolchain to gcc-6.3.0,uclibc-ng-1.0.22
+busybox 1.27.x
+添加shaodsocks-libev,pcap-dnsproxy
