@@ -1,0 +1,16 @@
+#!/bin/sh
+
+ENABLED=NO
+PROCS=/usr/sbin/xl2tpd
+ARGS="-D -l -c /opt/etc/xl2tpd/xl2tpd.conf -p /var/run/xl2tpd.pid"
+mkdir -p /var/run/xl2tpd
+mkdir -p /opt/var/run/xl2tpd
+touch /var/run/xl2tpd/l2tp-control
+touch /opt/var/run/xl2tpd/l2tp-control
+PREARGS=""
+DESC=$PROCS
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/sbin:/opt/bin
+
+#iptables -I INPUT -p udp --dport 1701 -j ACCEPT
+#-s /opt/etc/ppp/chap-secrets 
+. /etc_ro/init.d/rc.func

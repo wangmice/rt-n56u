@@ -1,0 +1,10 @@
+#!/bin/sh
+
+ENABLED=yes
+PROCS=Pcap_DNSProxy
+ARGS="--config-file /opt/etc/pcap-dnsproxy --disable-daemon"
+PREARGS=""
+DESC=$PROCS
+PATH=/usr/sbin:/usr/bin:/sbin:/bin:/opt/sbin:/opt/bin
+
+. /etc_ro/init.d/rc.func

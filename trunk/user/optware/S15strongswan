@@ -1,0 +1,78 @@
+#!/bin/sh
+
+ENABLED=no
+PATH=/opt/sbin:/opt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+ins_mods(){
+    if [[ "x$(lsmod |awk '{print $1;}'| grep '\<af_key\>')" == "x" ]];then
+        insmod /jffs/mod_ipsec/af_key.ko
+        insmod /jffs/mod_ipsec/xfrm_core.ko
+        insmod /jffs/mod_ipsec/esp4.ko
+        insmod /jffs/mod_ipsec/ah4.ko
+        insmod /jffs/mod_ipsec/xfrm_ipcomp.ko
+        insmod /jffs/mod_ipsec/ipcomp.ko
+        insmod /jffs/mod_ipsec/xfrm4_tunnel.ko
+        insmod /jffs/mod_ipsec/xfrm_user.ko
+        insmod /jffs/mod_ipsec/xt_esp.ko
+        insmod /jffs/mod_ipsec/xt_policy.ko
+        insmod /jffs/mod_ipsec/xfrm4_mode_transport.ko
+        insmod /jffs/mod_ipsec/xfrm4_mode_tunnel.ko
+        insmod /jffs/mod_ipsec/anubis.ko
+        insmod /jffs/mod_ipsec/authenc.ko
+        insmod /jffs/mod_ipsec/cbc.ko
+        insmod /jffs/mod_ipsec/xt_statistic.ko
+        insmod /jffs/mod_ipsec/lzo_compress.ko &&  insmod /jffs/mod_ipsec/lzo_decompress.ko && insmod /jffs/mod_ipsec/lzo.ko
+        insmod /jffs/mod_ipsec/sha256_generic.ko
+        insmod /jffs/mod_ipsec/sha512_generic.ko
+        insmod /jffs/mod_ipsec/pcbc.ko
+        insmod /jffs/mod_ipsec/ipt_ah.ko
+        insmod /jffs/mod_ipsec/des_generic.ko
+        modprobe zlib_deflate
+        insmod /jffs/mod_ipsec/zlib.ko
+        #insmod /jffs/mod_ipsec/
+    # insmod /jffs/mod_ipsec/
+    fi
+}
+
+start() {
+    # ins_mods
+	ipsec start
+    logger -t strongswan "strongSwan vpn started"
+}
+
+stop() {
+	ipsec stop
+    logger -t strongswan "strongSwan vpn stoped"
+}
+
+restart() {
+	ipsec restart
+}
+
+reload() {
+	ipsec update
+}
+
+if [ "$ENABLED" = "YES" ];then
+    case "$1" in
+        start)
+            start
+            ;;
+        stop)
+            stop
+            ;;
+        restart)
+            restart
+            ;;
+        reload)
+            reload
+            ;;
+        *)
+            echo $"Usage: $0 {start|stop|restart|reload]"
+            exit 1
+    esac
+else
+    logger "ipsec vpn not enabled"
+fi
+
+exit 0

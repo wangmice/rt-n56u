@@ -1,0 +1,53 @@
+#!/bin/sh
+
+#PATH=/opt/sbin:/opt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+ENABLED=yes
+PROCS=openvpn_server
+ARGS="--cd /opt/etc/openvpn/server1 --config /opt/etc/openvpn/server1/config.ovpn"
+PREARGS=""
+DESC=$PROCS
+PATH=/usr/sbin:/usr/bin:/sbin:/bin:/opt/sbin:/opt/bin
+
+if [[ "x$(lsmod |awk '{print $1;}'| grep '\<tun\>')" == "x" ]];then
+ 	 modprobe  tun || echo "insmod tun failed at $(date +'%F %T')" >>/tmp/vpn.log
+fi
+. /etc_ro/init.d/rc.func
+# start() {
+#   echo "start openvpn¡­"
+#   #test -f /dev/tun || modprobe tun && sleep 5
+#   /usr/sbin/openvpn --cd /opt/etc/openvpn --config /opt/etc/openvpn/xjtumed.openwrt.ovpn &
+# }
+#
+# stop() {
+# 	ps | grep 'openwrt.ovpn$' | awk '{print $1}' | xargs kill
+# }
+#
+# restart() {
+# 	stop
+#   sleep 5
+#   start
+# }
+#
+# reload() {
+# 	ipsec update
+# }
+#
+# case "$1" in
+# 	start)
+# 		start
+# 		;;
+# 	stop)
+# 		stop
+# 		;;
+# 	restart)
+# 		restart
+# 		;;
+# 	reload)
+# 		reload
+# 		;;
+# 	*)
+# 		echo $"Usage: $0 {start|stop|restart|reload]"
+# 		exit 1
+# esac
+# exit 0

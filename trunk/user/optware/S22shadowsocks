@@ -1,0 +1,10 @@
+#!/bin/sh
+
+ENABLED=yes
+PROCS=ss-local
+ARGS="-c /opt/etc/shadowsocks.json -l 23456 -u"
+PREARGS=""
+DESC=$PROCS
+PATH=/usr/sbin:/usr/bin:/sbin:/bin:/opt/sbin:/opt/bin:/opt/usr/bin
+
+. /etc_ro/init.d/rc.func

@@ -1,0 +1,97 @@
+#!/bin/sh
+
+ENABLED=yes
+PROCS=ss-redir
+SS_CONFIGFILE=/opt/etc/shadowsocks.json
+SS_SERVER_IP=$(grep  '"server":"' $SS_CONFIGFILE |grep -E -o '([0-9]{1,3}\.){3}[0-9]{1,3}')
+SS_LOCAL_PORT=$(grep  '"local_port"' $SS_CONFIGFILE |grep -E -o '[0-9]{1,}')
+SS_LOCAL_ADDRESS=$(grep  '"local_address"' $SS_CONFIGFILE |grep -E -o '([0-9]{1,3}\.){3}[0-9]{1,3}')
+
+ARGS="-c $SS_CONFIGFILE -b $SS_LOCAL_ADDRESS -u"
+PREARGS=""
+DESC=$PROCS
+PATH=/usr/sbin:/usr/bin:/sbin:/bin:/opt/sbin:/opt/bin:/opt/usr/bin
+
+ins_module(){
+    if [[ "x$(lsmod | grep '^\<xt_TPROXY\>')" == "x" ]];then
+        modprobe xt_TPROXY
+    fi
+    if [[ "x$(lsmod | grep '^\<xt_set\>')" == "x" ]];then
+        modprobe xt_set
+    fi
+    if [[ "x$(lsmod | grep '^\<ipt_REDIRECT\>')" == "x" ]];then
+        modprobe ipt_REDIRECT
+    fi
+    if [[ "x$(lsmod | grep '^\<ipt_ROUTE\>')" == "x" ]];then
+        modprobe ipt_ROUTE
+    fi
+}
+add_rule(){
+    if [ -z "`iptables-save | grep 'SS_SPEC_WAN_AC'`" ];then
+        ip rule add fwmark ${SS_LOCAL_PORT} lookup 10
+        ip route add local default dev lo table 10
+        iptables -t nat -N SS_SPEC_WAN_AC
+        #iptables -t nat -A PREROUTING -p tcp -m set ! --match-set localnet dst -m set ! --match-set chn dst -j REDIRECT --to-ports 1081
+        iptables -t nat -A OUTPUT         -p tcp -m multiport --dport 80,8080,443,21,53 -j SS_SPEC_WAN_AC
+        iptables -t nat -A PREROUTING     -p tcp -m multiport --dport 80,8080,443,21 -j SS_SPEC_WAN_AC
+
+        iptables -t nat -I SS_SPEC_WAN_AC -m set --match-set localnet dst -j RETURN
+        iptables -t nat -I SS_SPEC_WAN_AC -d $SS_SERVER_IP -j RETURN
+        iptables -t nat -A SS_SPEC_WAN_AC -p tcp -m set --match-set gfwlist dst -j REDIRECT --to-ports ${SS_LOCAL_PORT}
+        iptables -t nat -A SS_SPEC_WAN_AC -m set --match-set chn dst -j RETURN
+        #iptables -t nat -A SS_SPEC_WAN_AC -p tcp -j REDIRECT --to-ports ${SS_LOCAL_PORT}
+
+        iptables -t mangle -N SS_SPEC_TPROXY
+        #iptables -t mangle -A PREROUTING     -p udp -m set ! --match-set chn src -m set ! --match-set localnet src -j SS_SPEC_TPROXY
+        iptables -t mangle -I PREROUTING     -p udp --dport 53 -d 8.8.8.8  -j SS_SPEC_TPROXY
+        iptables -t mangle -I PREROUTING     -p udp --dport 53 -d 8.8.4.4  -j SS_SPEC_TPROXY
+        iptables -t mangle -I PREROUTING     -p udp -m set --match-set gfwlist dst -j SS_SPEC_TPROXY
+        iptables -t mangle -A SS_SPEC_TPROXY -d 127.0.0.0/24 -j RETURN
+        iptables -t mangle -A SS_SPEC_TPROXY -d 192.168.0.0/16 -j RETURN
+        iptables -t mangle -A SS_SPEC_TPROXY -d 10.42.0.0/16 -j RETURN
+        iptables -t mangle -A SS_SPEC_TPROXY -d 0.0.0.0/8 -j RETURN
+        iptables -t mangle -A SS_SPEC_TPROXY -d 10.0.0.0/8 -j RETURN
+        iptables -t mangle -A SS_SPEC_TPROXY -d 172.16.0.0/12 -j RETURN
+        iptables -t mangle -A SS_SPEC_TPROXY -d 224.0.0.0/4 -j RETURN
+        iptables -t mangle -A SS_SPEC_TPROXY -d 240.0.0.0/4 -j RETURN
+        iptables -t mangle -A SS_SPEC_TPROXY -d 169.254.0.0/16 -j RETURN
+        iptables -t mangle -A SS_SPEC_TPROXY -d 255.255.0.0/8 -j RETURN
+        iptables -t mangle -I SS_SPEC_TPROXY -d $SS_SERVER_IP -j RETURN
+        #iptables -t mangle -A SS_SPEC_TPROXY -p udp -m set ! --match-set chn dst -j TPROXY --on-port 1081 --on-ip 0.0.0.0 --tproxy-mark 0x1/0x1
+        # iptables -t mangle -A SS_SPEC_TPROXY -p udp -j TPROXY --on-port $SS_LOCAL_PORT --on-ip $SS_LOCAL_ADDRESS --tproxy-mark 0x1/0x1
+        iptables -t mangle -A SS_SPEC_TPROXY -p udp -j TPROXY --on-port $SS_LOCAL_PORT  --tproxy-mark ${SS_LOCAL_PORT}
+        # iptables -t mangle -A SS_SPEC_TPROXY -p udp -j TPROXY --on-port 10053 --on-ip 127.0.0.1  --tproxy-mark ${SS_LOCAL_PORT}
+    elif [ -z "`iptables-save -t nat | grep \"$SS_SERVER_IP\"`" ];then
+        iptables -t nat -I SS_SPEC_WAN_AC -d $SS_SERVER_IP -j RETURN
+    fi
+}
+del_rule(){
+    iptables -t nat    -D OUTPUT         -p tcp -m multiport --dport 80,8080,443,21,53 -j SS_SPEC_WAN_AC
+	iptables -t nat    -D PREROUTING     -p tcp -m multiport --dport 80,8080,443,21 -j SS_SPEC_WAN_AC
+	iptables -t mangle -D PREROUTING     -p udp --dport 53 -d 8.8.8.8  -j SS_SPEC_TPROXY
+	iptables -t mangle -D PREROUTING     -p udp --dport 53 -d 8.8.4.4  -j SS_SPEC_TPROXY
+	iptables -t mangle -D PREROUTING     -p udp -m set --match-set gfwlist dst -j SS_SPEC_TPROXY
+	iptables -t mangle -F SS_SPEC_TPROXY  && iptables -t mangle -X SS_SPEC_TPROXY
+	iptables -t nat    -F SS_SPEC_WAN_AC && iptables -t nat -X SS_SPEC_WAN_AC
+    ip route del local default dev lo table 10
+	ip rule delete fwmark ${SS_LOCAL_PORT} lookup 10
+}
+
+if [ "$ENABLED" = "yes" ];then
+case $1 in
+	start | Start | START)
+        ins_module
+        sleep 2
+        add_rule
+		;;
+	stop)
+        del_rule
+		;;
+    restart)
+        del_rule
+        sleep 3
+        add_rule
+        ;;
+esac
+fi
+. /etc_ro/init.d/rc.func
